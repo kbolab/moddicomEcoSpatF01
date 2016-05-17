@@ -1,0 +1,14 @@
+Package: moddicomEcoSpatF01
+Type: Package
+Title: Package for handling DICOM RT files
+Version: 0.51
+Date: 2014-11-26
+Author: Jacopo Lenkowicz, Roberto Gatta, Nicola Dinapoli
+Maintainer: Jacopo Lenkowicz <lenkowi@post.com>
+Description: This package contains an extension of the features
+    that can be applied to moddico V2. Such features are taken from the 
+    world of spatial econometrics   
+License: GPL-2
+Imports:
+    fields (>= 8.2-1),
+NeedsCompilation: yes
