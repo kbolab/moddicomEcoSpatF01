@@ -11,4 +11,5 @@ Description: This package contains an extension of the features
 License: GPL-2
 Imports:
     fields (>= 8.2-1),
+    moddicomV2 (>= 0.51)
 NeedsCompilation: yes

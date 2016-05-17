@@ -2,11 +2,11 @@
 #' 
 #' @description  dfdsfdfdsfdsfds
 #' @export
-#' @useDynLib moddicomV2 
+#' @useDynLib moddicomEcoSpatF01 
 #' @import fields
 #' @examples \dontrun{
 #' 
-#' # create an mmButo object and load some DICOM series
+#' # create an mmButo object and load some DICOM series 
 #' 
 #' obj<-mmButo()
 #' obj$openDICOMFolder(obj = obj, pathToOpen='./DICOMSeries/study4Radiomics' );
