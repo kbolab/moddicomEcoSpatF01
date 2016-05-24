@@ -1,38 +1,38 @@
 #' cdscdscd
-#' 
-#' @description  dfdsfdfdsfdsfds
+#'
+#' @description  dfdsfdfdsfdsfds yuhyuhyu
 #' @export
-#' @useDynLib moddicomEcoSpatF01 
+#' @useDynLib moddicomEcoSpatF01
 #' @import fields
 #' @examples \dontrun{
-#' 
-#' # create an mmButo object and load some DICOM series 
-#' 
+#'
+#' # create an mmButo object and load some DICOM series
+#'
 #' obj<-mmButo()
 #' obj$openDICOMFolder(obj = obj, pathToOpen='./DICOMSeries/study4Radiomics' );
-#' 
+#'
 #' # get a ROI Voxel list
 #' GTV<-obj$getROIVoxel(ROIName = "GTV")
-#' 
+#'
 #' # and calculate the wMatrix for each of them
 #' wMatrix<-F01.wMatrix( inputGTV = GTV, 2,2,2)
-#' 
-#' } 
+#'
+#' }
 F01.wMatrix <- function(inputGTV,dStar, erosionMarginX, erosionMarginY){
   objS<-services();
   Wlist <- list()
   inputGTV.eroded <-objS$applyErosion(inputGTV,erosionMarginX,erosionMarginY, margin.z=0)
   #create "eroded" mmButoStructureVoxelList object
   #loop on patients
-  
+
   for (k in seq(1,length(inputGTV))){
     cat(c("\n Patient: ",k ) )
-    patID<-names(inputGTV)[[k]] 
+    patID<-names(inputGTV)[[k]]
     Wlist[[ patID ]] <-list()
     vcNonEroso <- inputGTV[[k]]$masked.images$voxelCube
     vcEroso <- inputGTV.eroded[[k]]$masked.images$voxelCube
     listaVoxelErosi<-which(!is.na(vcEroso),arr.ind = TRUE)
-    
+
     #ora seleziono le coord (x,y) per ogni slice z e calcolo la matrice delle distanze euclidee tra le coppie di punti (funzione: rdist) e la matrice W definita nel ciclo for(i)for(j)
     for(z in seq(1,max(listaVoxelErosi[,3]))){
       cat(c("."))
@@ -53,7 +53,7 @@ F01.wMatrix <- function(inputGTV,dStar, erosionMarginX, erosionMarginY){
       #normalizzo i coefficienti di W
       for (i in seq(1,nrow(lista.risultato[[4]]))){
         Wnorm <- 0
-        for (j in seq(1,ncol(lista.risultato[[4]]))){ 
+        for (j in seq(1,ncol(lista.risultato[[4]]))){
           Wnorm <- Wnorm + lista.risultato[[4]][i,j]
         }
         Wstar[i,] <-lista.risultato[[4]][i,]/Wnorm
@@ -69,7 +69,7 @@ F01.wMatrix <- function(inputGTV,dStar, erosionMarginX, erosionMarginY){
 }
 
 #' cdscdg45g54scd
-#' 
+#'
 #' @description  dfdsg54g54g54g3fdfdsfdsfds
 #' @export
 F01.moranGrayMean <- function(Wlist){
@@ -109,7 +109,7 @@ F01.moranGrayMean <- function(Wlist){
 }
 
 #' cdscdgg5445g54scd
-#' 
+#'
 #' @description  dfdsg5445g5g54g54g3fdfdsfdsfds
 #' @export
 F01.statsI <- function(moranGray){
