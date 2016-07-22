@@ -64,7 +64,7 @@ F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, whatDo
   }
 
   if ("plotFeatures" %in% whatDoYouWantBack) plot.features(final.result$features)
-
+  Wlist[[z]]
   dataFrameI <- crea.dataframeI(final.result$features)
   if ("dataFrameI" %in% whatDoYouWantBack) final.result$dataFrameI <- dataFrameI
 
@@ -282,21 +282,29 @@ calcola.matrice.W<-function(voxelCube,dStar, erosionMarginX, erosionMarginY, vcN
       # invoca la funzione in C forzando esplicitamente il tipo
       # dei parametri (importante)
       lista.risultato<-.C("internalLoop",
-                          as.matrix(D),
+                          as.double(D),
                           as.integer(nrow(D)),
                           as.double(dStar),
                           as.matrix(W));
+      rm(D)
+      rm(W)
+      aaa <- lista.risultato[[4]]
+      rm(lista.risultato)
       #normalizzo i coefficienti di W
       Wnorm <- numeric()
-      Wnorm <- rowSums(lista.risultato[[4]])
-        for (i in seq(1,nrow(lista.risultato[[4]]))){
+      Wnorm <- rowSums(aaa)
+        for (i in seq(1,nrow(aaa))){
           if (Wnorm[i]!=0){
-          Wstar[i,] <-lista.risultato[[4]][i,]/Wnorm[i]
+          Wstar[i,] <-aaa[i,]/Wnorm[i]
           }
         }
+      rm(aaa)
       #costruisco le k*z(k) (nPazienti*nslicePaziente) matrici W
       Wstar <- round(Wstar,2)
-      Wlist[[z]] <- list("wStar"= Wstar,"coords"= slice, "vcEroso"=vcEroso[,,z])
+      Wlist[[z]] <- list("wStar"= Wstar,"coords"= slice, "vcEroso"= vcEroso[,,z])
+      rm(Wstar)
+      rm(slice)
+      gc()
     }
   return(Wlist)
 }
