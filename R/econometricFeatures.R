@@ -19,7 +19,7 @@
 #'
 #' }
 #'
-F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, whatDoYouWantBack=c("statsI")) {
+F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, pixelSpacingX, pixelSpacingY, whatDoYouWantBack=c("statsI")) {
 
   # operazioni preliminari
   objS<-services();
@@ -38,7 +38,7 @@ F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, whatDo
     listaVoxelErosi<-which(!is.na(vcEroso),arr.ind = TRUE)
     # per prima cosa calcola la matrice W
     if (length(listaVoxelErosi) != 0){
-      wMatrix<-calcola.matrice.W(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi)
+      wMatrix<-calcola.matrice.W(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi, pixelSpacingX, pixelSpacingY)
       if("wMatrix" %in% whatDoYouWantBack) final.result$wMatrix[[patID]]<-wMatrix
 
      # ora calcola il moranGrayMean
@@ -56,15 +56,10 @@ F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, whatDo
       #
       features <- calcola.features(extractedI)
       if("features" %in% whatDoYouWantBack) final.result$features[[patID]] <- features
-
-      #
-      #if ("plotFeatures" %in% whatDoYouWantBack) plot.features(features, k)
-
     }
   }
 
   if ("plotFeatures" %in% whatDoYouWantBack) plot.features(final.result$features)
-  Wlist[[z]]
   dataFrameI <- crea.dataframeI(final.result$features)
   if ("dataFrameI" %in% whatDoYouWantBack) final.result$dataFrameI <- dataFrameI
 
@@ -267,7 +262,7 @@ calcola.moranGrayMean<-function(Wlist) {
   return(moranGray)
 }
 
-calcola.matrice.W<-function(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi) {
+calcola.matrice.W<-function(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi, pixelSpacingX, pixelSpacingY) {
   Wlist<-list()
   #ora seleziono le coord (x,y) per ogni slice z e calcolo la matrice delle distanze euclidee tra le coppie di punti (funzione: rdist) e la matrice W definita nel ciclo for(i)for(j)
     for(z in seq(1,max(listaVoxelErosi[,3]))){
@@ -275,6 +270,8 @@ calcola.matrice.W<-function(voxelCube,dStar, erosionMarginX, erosionMarginY, vcN
       slice <- listaVoxelErosi[which(listaVoxelErosi[,3]==z),]
       if (class(slice) == "integer" || length(slice) == 0) next
       slice2D <- slice[,1:2]
+      slice2D[,1] <- slice2D[,1]*pixelSpacingX
+      slice2D[,2] <- slice2D[,2]*pixelSpacingY
       D <- matrix()
       D <- rdist(slice2D)
       W <- matrix(0,nrow=nrow(D), ncol=ncol(D))
