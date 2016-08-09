@@ -1,6 +1,24 @@
-#' cdscdscd
+#' Moran 2D spatial analysison DICOM images (extension of moddicomV2 package)
 #'
-#' @description  dfdsfdfdsfdsfds yuhyuhyu
+#' @description   Package of functions to extract and test significance level of slice-wise spatial features (Moran analysis) from DICOM images.
+#'                \itemize{
+#'                \item \code{whatDoYouWantBack=c("wMatrix")} it gives back: 1) wStar: the normalized W matrix for the current slice; 2) Coords: x and y coordinates of the pixels which contributed to W* (if dimension of W* is NxN, then length of Coords is N); 3) VcEroso: the image (voxelCube) after the erosion.
+#'                \item \code{whatDoYouWantBack=c("moranGrayMean") } it gives back: 1) I_coeff: the I value computed on each slice; 2) I_nullHp: the expected I coefficient for null hp (no spatial autocorr.); 3) varI_nullHp: the expected variance of I coefficient for null hp.
+#'                \item \code{whatDoYouWantBack=c("extractedI") } it gives back: 1) nCoords: number of contributing pixels; 2) Icoeff: value of I coefficient for the slice; 3) pValue: statistical significance of the I coefficient.
+#'                \item \code{whatDoYouWantBack=c("features")  } it gives back: 1) Icoeff: vector of per-slice I coefficients; 2) meanI: mean of per-slice I values: 3) medianI: median of per-slice I values; 4) maxI: maximum of per-slice I values; 5) minI: minimum of per-slice I values; 6) rangeI:  maxI - minI; 7) maxISq: squared maximum of per-slice I values; 8) minISq: squared minimum of per-slice I values; 9) weightedMeanI: weighted mean of per-slice I values; weights are number of contributing pixels.
+#'                \item \code{whatDoYouWantBack=c("plotFeatures")} plots the absolute frequency distribution for each feature
+#'                \item \code{whatDoYouWantBack=c("dataframeI")} it gives back a dataframe with the extracted features as columns (a record for each patient)
+#'
+#'                }
+#' @param Parameters for calculateCluster methoda are:
+#'   \itemize{
+#'    \item \code{d* } distance threshold to biuld the W matrix
+#'    \item \code{erosionMarginX } number of pixel to "discard" at the border along the x direction
+#'    \item \code{erosionMarginY } number of pixel to "discard" at the border along the y direction
+#'    \item \code{pixelSpacingX } pixel spacing in the x direction (default =1)
+#'    \item \code{pixelSpacingY } pixel spacing in the y direction (default =1)
+#'    \item \code{whatDoYouWantBack } a character vector including one or more of the following values:"wMatrix","moranGrayMean","extractedI","features","plotFeatures","dataframeI".
+#'   }
 #' @export
 #' @useDynLib moddicomEcoSpatF01
 #' @import fields
@@ -14,12 +32,36 @@
 #' # get a ROI Voxel list
 #' GTV<-obj$getROIVoxel(ROIName = "GTV")
 #'
-#' # and calculate the wMatrix for each of them
-#' wMatrix<-F01.wMatrix( inputGTV = GTV, 2,2,2)
+#' # calculate the wMatrix for each of them (distance threshold = 2, erosion along x and y =2, pixel spacing along x and y =1)
+#' wMatrix <-F01.pipeline.01( inputGTV = GTV, 2,2,2,whatDoYouWantBack=c("wMatrix"))
 #'
 #' }
 #'
-F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, pixelSpacingX, pixelSpacingY, whatDoYouWantBack=c("statsI")) {
+#' # calculate slice-wise I coefficients and null Hypotesis values for each of them (distance threshold = 2, erosion along x and y =2, pixel spacing along x and y =1)
+#' m.g.mean <-F01.pipeline.01( inputGTV = GTV, 2,2,2,whatDoYouWantBack=c("moranGrayMean"))
+#'
+#' }
+#'
+#'
+#' # calculate slice-wise I coefficients and Moran test values for each of them (distance threshold = 2, erosion along x and y =2, pixel spacing along x and y =1)
+#' stats.I <-F01.pipeline.01( inputGTV = GTV, 2,2,2,whatDoYouWantBack=c("extractedI"))
+#'
+#' }
+#'
+#'
+#' # calculate features from significant I coefficients (distance threshold = 2, erosion along x and y =2, pixel spacing along x and y =1)
+#' features.I <-F01.pipeline.01( inputGTV = GTV, 2,2,2,whatDoYouWantBack=c("features"))
+#'
+#' }
+#'
+#'
+#' # calculate features from significant I coefficients and put them in a dataframe
+#' dataframe.I <-F01.pipeline.01( inputGTV = GTV, 2,2,2,whatDoYouWantBack=c("dataframeI"))
+#'
+#' }
+
+
+F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, pixelSpacingX=1, pixelSpacingY=1, whatDoYouWantBack=c("statsI")) {
 
   # operazioni preliminari
   objS<-services();
