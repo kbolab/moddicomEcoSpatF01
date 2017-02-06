@@ -235,7 +235,7 @@ calcola.moranGrayMeanx_yFixed<-function(Wlist) {
       #il minimo mi serve per portare a zero il valore minimo se negativo
       vcEroso[[y]] <- vcEroso[[y]][!is.na(vcEroso[[y]])]
       minumGray <- min(vcEroso[[y]])
-      if(length(dim(x)[1])==0 || dim(x)[1] <= 5) next
+      if(length(dim(x)[1])==0) next
       for(i in seq(1:dim(x)[1])){
         if (minumGray < 0 ) {grayLevels[i] <- vcEroso[[y]][i] - minumGray}
         else {grayLevels[i] <- vcEroso[[y]][i]}

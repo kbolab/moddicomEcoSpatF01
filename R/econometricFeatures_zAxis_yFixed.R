@@ -234,7 +234,7 @@ calcola.moranGrayMeanz_yFixed<-function(Wlist) {
       #il minimo mi serve per portare a zero il valore minimo se negativo
       vcEroso[[y]] <- vcEroso[[y]][!is.na(vcEroso[[y]])]
       minumGray <- min(vcEroso[[y]])
-      if(length(dim(x)[1])==0 || dim(x)[1] <= 5) next
+      if(length(dim(x)[1])==0) next
       for(i in seq(1:dim(x)[1])){
         if (minumGray < 0 ) {grayLevels[i] <- vcEroso[[y]][i] - minumGray}
         else {grayLevels[i] <- vcEroso[[y]][i]}
@@ -298,9 +298,9 @@ calcola.matrice.Wz_yFixed<-function(voxelCube,dStar, erosionMarginX, erosionMarg
     vcErosoList <- list()
     for(x in seq(1,max(listaVoxelErosi[,1]))){
       if (is.null(dim(slice))) {slicez <- slice[which(slice[1]==x)]}
-      slicez <- slice[which(slice[,1]==x),]
+      else slicez <- slice[which(slice[,1]==x),]
       if (class(slicez) == "integer" || length(slicez) == 0) next
-      slicez <- slicez*pixelSpacingX
+      slicez <- slicez*pixelSpacingY
       D <- matrix()
       D <- rdist(slicez)
       W <- matrix(0,nrow=nrow(D), ncol=ncol(D))
