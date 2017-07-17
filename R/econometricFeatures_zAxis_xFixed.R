@@ -61,7 +61,7 @@
   #' }
 
 
-  F01.pipeline.01_zAxis_xFixed<-function(inputGTV, dStar, erosionMarginX=0, erosionMarginY=0, whatDoYouWantBack=c("extractedI","dataFrameI","features")) {
+  F01.pipeline.01_zAxis_xFixed<-function(inputGTV, dStar, erosionMarginX=0, erosionMarginY=0, whatDoYouWantBack=c("wMatrix","moranGrayMean","statsI","extractedI","dataFrameI","features")) {
 
     # operazioni preliminari
     objS<-services();
@@ -171,7 +171,7 @@ extract.Iz_xFixed <- function(Wlist,moranGray,testResults){
     #   }
     #   else {extractedI[[z]][[y]] <- NA}
     # }
-    Islice[z] <- mean(unlist(moranGray[[z]]$I_coeffList))
+     Islice[z] <- mean(unlist(moranGray[[z]]$I_coeffList))
 
   }
   return(Islice)

@@ -61,7 +61,7 @@
 #' }
 
 
-F01.pipeline.01_zAxis_yFixed<-function(inputGTV,dStar, erosionMarginX=0, erosionMarginY=0, whatDoYouWantBack=c("extractedI","dataFrameI","features")) {
+F01.pipeline.01_zAxis_yFixed<-function(inputGTV,dStar, erosionMarginX=0, erosionMarginY=0, whatDoYouWantBack=c("wMatrix","moranGrayMean","statsI","extractedI","dataFrameI","features")) {
 
   # operazioni preliminari
   objS<-services();
@@ -208,7 +208,7 @@ calcola.statsTz_yFixed<-function(moranGray){
   }
 
   testResults <- list("zScoresList"= zScoresList, "pValuesList"= pValuesList)
-  #Imean <- mean(Icoeff)
+  Imean <- mean(Icoeff)
   return(testResults)
 }
 

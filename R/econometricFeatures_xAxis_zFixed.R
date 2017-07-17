@@ -33,7 +33,7 @@
 #' GTV<-obj$getROIVoxel(ROIName = "GTV")
 #'
 #' # calculate the wMatrix for each of them (distance threshold = 2, erosion along x and y =2, pixel spacing along x and y =1)
-#' wMatrix <-F01.pipeline.01( inputGTV = GTV, 2,2,2,whatDoYouWantBack=c("wMatrix"))inputGTV$`/media/kbocalc/Data/J/RadiomicsSubsets/ex/01149525`$geometricalInformationOfImages$pixelSpacing[1]
+#' wMatrix <-F01.pipeline.01( inputGTV = GTV, 2,2,2,whatDoYouWantBack=c("wMatrix"))
 #'
 #' }
 #'
@@ -61,7 +61,7 @@
 #' }
 
 
-F01.pipeline.01_yAxis_zFixed<-function(inputGTV, dStar, erosionMarginX=0, erosionMarginY=0, whatDoYouWantBack=c("wMatrix","moranGrayMean","statsI","extractedI","dataFrameI","features")) {
+F01.pipeline.01_xAxis_zFixed<-function(inputGTV,dStar, erosionMarginX=0, erosionMarginY=0, whatDoYouWantBack=c("wMatrix","moranGrayMean","statsI","extractedI","dataFrameI","features")) {
 
   # operazioni preliminari
   objS<-services();
@@ -78,34 +78,35 @@ F01.pipeline.01_yAxis_zFixed<-function(inputGTV, dStar, erosionMarginX=0, erosio
     vcNonEroso <- inputGTV[[k]]$masked.images$voxelCube
     vcEroso <- inputGTV.eroded[[k]]$masked.images$voxelCube
     listaVoxelErosi<-which(!is.na(vcEroso),arr.ind = TRUE)
+
     pixelSpacingX <- inputGTV[[k]]$geometricalInformationOfImages$pixelSpacing[1]
     pixelSpacingY <- inputGTV[[k]]$geometricalInformationOfImages$pixelSpacing[2]
     # per prima cosa calcola la matrice W
     if (length(listaVoxelErosi) != 0){
-      wMatrix<-calcola.matrice.Wy_zFixed(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi, pixelSpacingX, pixelSpacingY)
+      wMatrix<-calcola.matrice.Wx_zFixed(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi, pixelSpacingX, pixelSpacingY)
       if("wMatrix" %in% whatDoYouWantBack) final.result$wMatrix[[patID]]<-wMatrix
 
       # ora calcola il moranGrayMean
-      mGM<-calcola.moranGrayMeany_zFixed(wMatrix)
+      mGM<-calcola.moranGrayMeanx_zFixed(wMatrix)
       if("moranGrayMean" %in% whatDoYouWantBack) final.result$moranGrayMean[[patID]]<-mGM
 
-      #ora calcola I
-      stats.I<- calcola.statsTy_zFixed(mGM)
-      if("statsI" %in% whatDoYouWantBack) final.result$statsI[[patID]]<-stats.I
+    #ora calcola I
+    stats.I<- calcola.statsTx_zFixed(mGM)
+    if("statsI" %in% whatDoYouWantBack) final.result$statsI[[patID]]<-stats.I
 
       #extract denoised (more than 20 contributing pixels) amd significant (pValue less than 0.05) moran Is
-      extractedI <- extract.Iy_zFixed(wMatrix,mGM,stats.I)
+      extractedI <- extract.Ix_zFixed(wMatrix,mGM,stats.I)
       if("extractedI" %in% whatDoYouWantBack) final.result$extractedI[[patID]]<-extractedI
 
       #
-      features <- calcola.featuresy_zFixed(extractedI)
+      features <- calcola.featuresx_zFixed(extractedI)
       if("features" %in% whatDoYouWantBack) final.result$features[[patID]] <- features
     }
   }
 
   # if ("plotFeatures" %in% whatDoYouWantBack) plot.features(final.result$features)
 
-  dataFrameI <- crea.dataframeIy_zFixed(final.result$features)
+  dataFrameI <- crea.dataframeIx_zFixed(final.result$features)
   if ("dataFrameI" %in% whatDoYouWantBack) final.result$dataFrameI <- dataFrameI
 
   return(final.result)
@@ -113,7 +114,7 @@ F01.pipeline.01_yAxis_zFixed<-function(inputGTV, dStar, erosionMarginX=0, erosio
 
 
 
-crea.dataframeIy_zFixed <- function (features){
+crea.dataframeIx_zFixed <- function (features){
   rowsId <-sub(".*/", "", names(features))
   nomi <- names(features[[1]])[2:length(features[[1]])]
   tmp <- list()
@@ -127,7 +128,7 @@ crea.dataframeIy_zFixed <- function (features){
 }
 
 
-calcola.featuresy_zFixed <- function(extractedI){
+calcola.featuresx_zFixed <- function(extractedI){
   Icoeff <- numeric()
   nPixel <- numeric()
   for (z in 1:length(extractedI)){
@@ -148,7 +149,7 @@ calcola.featuresy_zFixed <- function(extractedI){
 }
 
 
-extract.Iy_zFixed <- function(Wlist,moranGray,testResults){
+extract.Ix_zFixed <- function(Wlist,moranGray,testResults){
   # nCoords <- numeric()
   # extractedI <- list()
   # Npixel <- list()
@@ -169,14 +170,14 @@ extract.Iy_zFixed <- function(Wlist,moranGray,testResults){
     #   }
     #   else {extractedI[[z]][[y]] <- NA}
     # }
-    Islice[z] <- mean(unlist(moranGray[[z]]$I_coeffList))
+  Islice[z] <- mean(unlist(moranGray[[z]]$I_coeffList))
 
   }
   return(Islice)
 }
 
 
-calcola.statsTy_zFixed<-function(moranGray){
+calcola.statsTx_zFixed<-function(moranGray){
 
   Imean <- numeric()
   Icoeff <- list()
@@ -185,46 +186,32 @@ calcola.statsTy_zFixed<-function(moranGray){
   zScoresList <- list()
   pValuesList <- list()
 
-  for(z in seq(1:length(moranGray))){
+    for(z in seq(1:length(moranGray))){
 
-    Inull[[z]]<-list()
-    varNull[[z]]<-list()
-    Icoeff[[z]]<-list()
-    zScoresList[[z]] <- list()
-    pValuesList[[z]] <- list()
+      Inull[[z]]<-list()
+      varNull[[z]]<-list()
+      Icoeff[[z]]<-list()
+      zScoresList[[z]] <- list()
+      pValuesList[[z]] <- list()
 
-    for(x in seq(1:length(moranGray[[z]]$I_coeffList))){
-      if (length(moranGray[[z]]$I_coeffList) == 0 || is.null(moranGray[[z]]$I_coeffList[[x]])) {Icoeff[[z]][[x]] <- NA}
-      else {Icoeff[[z]][[x]] <- moranGray[[z]]$I_coeffList[[x]]
-      Inull[[z]][[x]] <- moranGray[[z]]$IList_nullHp[[x]]
-      varNull[[z]][[x]] <- moranGray[[z]]$varIList_nullHp[[x]]
-      zScoresList[[z]][[x]] <- (Icoeff[[z]][[x]] - Inull[[z]][[x]])/sqrt(varNull[[z]][[x]])
-      pValuesList[[z]][[x]] <- 2*pnorm(-abs(zScoresList[[z]][[x]]))
+      for(y in seq(1:length(moranGray[[z]]$I_coeffList))){
+        if (length(moranGray[[z]]$I_coeffList) == 0 || is.null(moranGray[[z]]$I_coeffList[[y]])) {Icoeff[[z]][[y]] <- NA}
+        else {Icoeff[[z]][[y]] <- moranGray[[z]]$I_coeffList[[y]]
+        Inull[[z]][[y]] <- moranGray[[z]]$IList_nullHp[[y]]
+        varNull[[z]][[y]] <- moranGray[[z]]$varIList_nullHp[[y]]
+        zScoresList[[z]][[y]] <- (Icoeff[[z]][[y]] - Inull[[z]][[y]])/sqrt(varNull[[z]][[y]])
+        pValuesList[[z]][[y]] <- 2*pnorm(-abs(zScoresList[[z]][[y]]))
+        }
       }
     }
-  }
 
   testResults <- list("zScoresList"= zScoresList, "pValuesList"= pValuesList)
-  #Imean <- mean(Icoeff)
+  Imean <- mean(Icoeff)
   return(testResults)
 }
 
-####################
 
-## A helper function that tests whether an object is either NULL _or_
-## a list of NULLs
-is.NullOb <- function(x) is.null(x) | all(sapply(x, is.null))
-
-## Recursively step down into list, removing all such objects
-rmNullObs <- function(x) {
-  x <- Filter(Negate(is.NullOb), x)
-  lapply(x, function(x) if (is.list(x)) rmNullObs(x) else x)
-}
-
-###################
-
-
-calcola.moranGrayMeany_zFixed<-function(Wlist) {
+calcola.moranGrayMeanx_zFixed<-function(Wlist) {
   #ciclo sulle slice
   moranGray <-list()
   varIList <- list()
@@ -238,57 +225,57 @@ calcola.moranGrayMeany_zFixed<-function(Wlist) {
     InormList <- list()
     t_Wstar <-list()
     expectIList <- list()
-    for(x in seq(1:length(coords))){
-      if (length(coords)==0) next
-      y <- coords[[x]]
-      grayLevels <- numeric()
-      #il minimo mi serve per portare a zero il valore minimo se negativo
-      vcEroso[[x]] <- vcEroso[[x]][!is.na(vcEroso[[x]])]
-      minumGray <- min(vcEroso[[x]])
-      if(length(dim(y)[1])==0) next
-      for(i in seq(1:dim(y)[1])){
-        if (minumGray < 0 ) {grayLevels[i] <- vcEroso[[x]][i] - minumGray}
-        else {grayLevels[i] <- vcEroso[[x]][i]}
-      }
-      grayMean <- mean(grayLevels,na.rm=T)
-      # definisco la grandezza da "laggare" come differenza rispetto al valor medio
-      grayVar <- grayLevels - grayMean
-      #calcolo lo scalare di correlazione spaziale I
-      laggedGray <- Wstar[[x]] %*% grayVar
-      laggedGray <- laggedGray[which(!is.na(laggedGray))]
-      grayVar <- grayVar[which(!is.na(laggedGray))]
-      I <- grayVar %*% laggedGray
-      norm <- grayVar %*% grayVar
-      Inorm <- as.numeric(I/norm)
-      InormList[[x]] <- Inorm
-      #### CALCOLO ANCHE IL VALOR MEDIO E LA VARIANZA DI I SOTTO L'IPOTESI NULLA
-      if (is.null(InormList[[x]]) == T) next
-      t_Wstar[[x]] <- t(Wstar[[x]]) # 'a trassposta
-      N <- nrow(Wstar[[x]])
-      expectI = 1 / ( - N + 1 );
-      S1 <- 0
-      S2 <- 0
-      S4 <- 0
-      S5 <- 0
-      sumSquaresW <- 0
-      varI <- 0
-      lista.varMoranNull<-.C("varMoranNull",
-                             as.double(Wstar[[x]]),
-                             as.double(t_Wstar[[x]]),
-                             as.integer(N),
-                             as.double(S1),
-                             as.double(S2));
+      for(y in seq(1:length(coords))){
+        x <- coords[[y]]
+        grayLevels <- numeric()
+        #il minimo mi serve per portare a zero il valore minimo se negativo
+        vcEroso[[y]] <- vcEroso[[y]][!is.na(vcEroso[[y]])]
+        minumGray <- min(vcEroso[[y]])
+        if(length(dim(x)[1])==0) next
+          for(i in seq(1:dim(x)[1])){
+            if (minumGray < 0 ) {grayLevels[i] <- vcEroso[[y]][i] - minumGray}
+            else {grayLevels[i] <- vcEroso[[y]][i]}
+          }
+        grayMean <- mean(grayLevels,na.rm=T)
+        # definisco la grandezza da "laggare" come differenza rispetto al valor medio
+        grayVar <- grayLevels - grayMean
+        #calcolo lo scalare di correlazione spaziale I
+        laggedGray <- Wstar[[y]] %*% grayVar
+        laggedGray <- laggedGray[which(!is.na(laggedGray))]
+        grayVar <- grayVar[which(!is.na(laggedGray))]
+        I <- grayVar %*% laggedGray
+        norm <- grayVar %*% grayVar
+        Inorm <- as.numeric(I/norm)
+        InormList[[y]] <- Inorm
 
-      S1 <- lista.varMoranNull[[4]]
-      S2 <- lista.varMoranNull[[5]]
-      S3 <-  nrow(Wstar[[x]]) * sum((grayVar^4)) * (1/sum(grayVar^2)^2)
-      sumSquaresW <- sum(Wstar[[x]])^2
-      S4 <- (N^2 - 3 * N + 3) * S1 - N * S2 + 3 * sumSquaresW
-      S5 <- (N^2 - N) * S1 - 2 * N * S2 + 6 * sumSquaresW
-      varI <- ((N * S4 - S3 * S5 ) / ((N - 1) * (N - 2) * (N - 3) * sumSquaresW)) - expectI^2
-      expectIList[[x]] <- expectI
-      varIList[[x]] <- varI
-    }
+        #### CALCOLO ANCHE IL VALOR MEDIO E LA VARIANZA DI I SOTTO L'IPOTESI NULLA
+          if (is.null(InormList[[y]]) == T) next
+          t_Wstar[[y]] <- t(Wstar[[y]]) # 'a trassposta
+          N <- nrow(Wstar[[y]])
+          expectI = 1 / ( - N + 1 );
+          S1 <- 0
+          S2 <- 0
+          S4 <- 0
+          S5 <- 0
+          sumSquaresW <- 0
+          varI <- 0
+          lista.varMoranNull<-.C("varMoranNull",
+                                 as.double(Wstar[[y]]),
+                                 as.double(t_Wstar[[y]]),
+                                 as.integer(N),
+                                 as.double(S1),
+                                 as.double(S2));
+
+          S1 <- lista.varMoranNull[[4]]
+          S2 <- lista.varMoranNull[[5]]
+          S3 <-  nrow(Wstar[[y]]) * sum((grayVar^4)) * (1/sum(grayVar^2)^2)
+          sumSquaresW <- sum(Wstar[[y]])^2
+          S4 <- (N^2 - 3 * N + 3) * S1 - N * S2 + 3 * sumSquaresW
+          S5 <- (N^2 - N) * S1 - 2 * N * S2 + 6 * sumSquaresW
+          varI <- ((N * S4 - S3 * S5 ) / ((N - 1) * (N - 2) * (N - 3) * sumSquaresW)) - expectI^2
+          expectIList[[y]] <- expectI
+          varIList[[y]] <- varI
+      }
     moranGray[[z]] <- list("I_coeffList"= InormList ,"IList_nullHp"= expectIList, "varIList_nullHp"= varIList)
   }
   return(moranGray)
@@ -297,7 +284,7 @@ calcola.moranGrayMeany_zFixed<-function(Wlist) {
 
 
 
-calcola.matrice.Wy_zFixed<-function(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi, pixelSpacingX, pixelSpacingY) {
+calcola.matrice.Wx_zFixed<-function(voxelCube,dStar, erosionMarginX, erosionMarginY, vcNonEroso, vcEroso, listaVoxelErosi, pixelSpacingX, pixelSpacingY) {
   Wlist<-list()
   #ora seleziono le coord (x,y) per ogni slice z e calcolo la matrice delle distanze euclidee tra le coppie di punti (funzione: rdist) e la matrice W definita nel ciclo for(i)for(j)
   for(z in seq(1,max(listaVoxelErosi[,3]))){
@@ -306,37 +293,37 @@ calcola.matrice.Wy_zFixed<-function(voxelCube,dStar, erosionMarginX, erosionMarg
     WstarList <- list()
     coordsList <- list()
     vcErosoList <- list()
-    for(x in seq(1,max(listaVoxelErosi[,1]))){
-      slicey <- slice[which(slice[,1]==x),]
-      if (class(slicey) == "integer" || length(slicey) == 0) next
-      slicey <- slicey*pixelSpacingY
-      D <- matrix()
-      D <- rdist(slicey)
-      W <- matrix(0,nrow=nrow(D), ncol=ncol(D))
-      Wstar <- matrix(0,nrow=nrow(W), ncol=ncol(W))
-      # invoca la funzione in C forzando esplicitamente il tipo
-      # dei parametri (importante)
-      lista.risultato<-.C("internalLoop",
-                          as.double(D),
-                          as.integer(nrow(D)),
-                          as.double(dStar),
-                          as.matrix(W));
-      aaa <- lista.risultato[[4]]
-      rm(lista.risultato)
-      #normalizzo i coefficienti di W
-      Wnorm <- numeric()
-      Wnorm <- rowSums(aaa)
-      for (i in seq(1,nrow(aaa))){
-        if (Wnorm[i]!=0){
-          Wstar[i,] <-aaa[i,]/Wnorm[i]
-        }
-      }
+      for(y in seq(1,max(listaVoxelErosi[,2]))){
+        slicex <- slice[which(slice[,2]==y),]
+          if (class(slicex) == "integer" || length(slicex) == 0) next
+          slicex <- slicex*pixelSpacingX
+          D <- matrix()
+          D <- rdist(slicex)
+          W <- matrix(0,nrow=nrow(D), ncol=ncol(D))
+          Wstar <- matrix(0,nrow=nrow(W), ncol=ncol(W))
+          # invoca la funzione in C forzando esplicitamente il tipo
+          # dei parametri (importante)
+          lista.risultato<-.C("internalLoop",
+                              as.double(D),
+                              as.integer(nrow(D)),
+                              as.double(dStar),
+                              as.matrix(W));
+          aaa <- lista.risultato[[4]]
+          rm(lista.risultato)
+          #normalizzo i coefficienti di W
+          Wnorm <- numeric()
+          Wnorm <- rowSums(aaa)
+          for (i in seq(1,nrow(aaa))){
+            if (Wnorm[i]!=0){
+              Wstar[i,] <-aaa[i,]/Wnorm[i]
+            }
+          }
       #costruisco le k*z(k) (nPazienti*nslicePaziente) matrici W
       Wstar <- round(Wstar,2)
-      WstarList[[x]] <- Wstar
-      coordsList[[x]] <- slicey
-      vcErosoList[[x]] <- vcEroso[x,,z]
-    }
+      WstarList[[y]] <- Wstar
+      coordsList[[y]] <- slicex
+      vcErosoList[[y]] <- vcEroso[,y,z]
+      }
 
     Wlist[[z]] <- list("wStarList"= WstarList,"coordsList"= coordsList, "vcErosoList"= vcErosoList)
 

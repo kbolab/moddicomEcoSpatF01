@@ -94,7 +94,6 @@ F01.pipeline.01<-function(inputGTV,dStar, erosionMarginX, erosionMarginY, pixelS
       # extract denoised (more than 20 contributing pixels) amd significant (pValue less than 0.05) moran Is
       extractedI <- extract.I(wMatrix,mGM,stats.I)
       if("extractedI" %in% whatDoYouWantBack) final.result$extractedI[[patID]]<-extractedI
-
       #
       features <- calcola.features(extractedI)
       if("features" %in% whatDoYouWantBack) final.result$features[[patID]] <- features
@@ -176,18 +175,23 @@ plot.features <- function(features){
 calcola.features <- function(extractedI){
   Icoeff <- numeric()
   nPixel <- numeric()
-  for (z in 1:length(extractedI)){
-    Icoeff[z] <- extractedI[[z]]$Icoeff
-    nPixel[z] <- extractedI[[z]]$nCoords
-  }
-  meanI <- mean(Icoeff,na.rm=T)
-  medianI <- median(Icoeff,na.rm=T)
-  maxI <- max(Icoeff,na.rm=T)
-  minI <- min(Icoeff,na.rm=T)
-  rangeI <- maxI - minI
-  maxISq <- maxI^2
-  minISq <- minI^2
-  weightedMeanI <- sum(Icoeff * nPixel,na.rm=T)/sum(nPixel,na.rm=T)
+  meanI<- numeric()
+  medianI<- numeric()
+  maxI<- numeric()
+  minI<- numeric()
+  rangeI<- numeric()
+  maxISq<- numeric()
+  minISq<- numeric()
+  weightedMeanI<- numeric()
+
+    meanI <- mean(extractedI$Icoeff,na.rm=T)
+    medianI <- median(extractedI$Icoeff,na.rm=T)
+    maxI <- max(extractedI$Icoeff,na.rm=T)
+    minI <- min(extractedI$Icoeff,na.rm=T)
+    rangeI <- maxI - minI
+    maxISq <- maxI^2
+    minISq <- minI^2
+    weightedMeanI <- sum(extractedI$Iccoeff * extractedI$nCoords,na.rm=T)/sum(extractedI$nCoords,na.rm=T)
 
   features <- list("Icoeff" = Icoeff, "meanI" = meanI, "medianI" = medianI, "maxI" = maxI, "minI" = minI, "rangeI" = rangeI,
                    "maxISq" = maxISq, "minISq" = minISq, "weightedMeanI" = weightedMeanI)
@@ -200,14 +204,19 @@ extract.I <- function(Wlist,moranGray,testResults){
   moranGray <-  moranGray[!sapply(moranGray, is.null)]
   nCoords <- numeric()
   extractedI <- list()
+  Icoeff <-numeric()
+  pValue <- numeric()
     for (slice in 1:length(moranGray)){
+      extractedI[[slice]] <- list()
       Npixel <- numeric()
-      Npixel[slice] <- dim(Wlist[[slice]]$coords)[1]
-       if (Npixel[slice] > 20 & testResults$pValues[slice] <= 0.05){
-           nCoords[slice] <- Npixel[slice]
-           extractedI[[slice]] <- list("sliceId"=slice, "nCoords" = nCoords[slice], "Icoeff"= moranGray[[slice]]$I_coeff, "pValue"= testResults$pValues[slice])
+      Npixel <- dim(Wlist[[slice]]$coords)[1]
+       if (Npixel > 20 & testResults$pValues[slice] <= 0.05){
+           nCoords[slice] <- Npixel
+           Icoeff[slice] <- moranGray[[slice]]$I_coeff
+           pValue[slice] <- testResults$pValues[slice]
        }
     }
+  extractedI <- list("sliceId"=slice, "nCoords" = nCoords, "Icoeff"= Icoeff, "pValue"= pValue)
   return(extractedI)
 }
 
